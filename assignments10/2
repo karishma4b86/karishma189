@@ -1,0 +1,91 @@
+import pygame
+import random
+import sys
+import time
+
+# Initialize Pygame
+pygame.init()
+
+# Screen setup
+WIDTH, HEIGHT = 600, 400
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Keyboard Reaction Game")
+
+# Colors
+BG_COLOR = (34, 34, 34)
+CIRCLE_COLOR = (0, 200, 0)
+TEXT_COLOR = (255, 255, 255)
+
+# Circle properties
+RADIUS = 30
+
+# Font
+font = pygame.font.SysFont(None, 36)
+
+def random_position():
+    x = random.randint(RADIUS, WIDTH - RADIUS)
+    y = random.randint(RADIUS, HEIGHT - RADIUS)
+    return x, y
+
+def draw_text(text, pos):
+    img = font.render(text, True, TEXT_COLOR)
+    screen.blit(img, pos)
+
+def main():
+    clock = pygame.time.Clock()
+    score = 0
+    reaction_times = []
+
+    circle_x, circle_y = random_position()
+    circle_visible = False
+    circle_appeared_time = 0
+
+    wait_time = random.uniform(1, 3)  # Random delay before showing circle
+    last_time = time.time()
+
+    running = True
+    while running:
+        screen.fill(BG_COLOR)
+
+        current_time = time.time()
+
+        # Show circle after waiting period
+        if not circle_visible and (current_time - last_time) >= wait_time:
+            circle_x, circle_y = random_position()
+            circle_visible = True
+            circle_appeared_time = current_time
+
+        # Draw circle if visible
+        if circle_visible:
+            pygame.draw.circle(screen, CIRCLE_COLOR, (circle_x, circle_y), RADIUS)
+
+        # Draw score and last reaction time
+        draw_text(f"Score: {score}", (10, 10))
+        if reaction_times:
+            draw_text(f"Last Reaction: {reaction_times[-1]:.3f}s", (10, 50))
+        else:
+            draw_text(f"Press SPACE when circle appears", (10, 50))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            elif event.type == pygame.KEYDOWN:
+                if circle_visible and event.key == pygame.K_SPACE:
+                    reaction_time = current_time - circle_appeared_time
+                    reaction_times.append(reaction_time)
+                    score += 1
+                    circle_visible = False
+                    last_time = current_time
+                    wait_time = random.uniform(1, 3)  # reset wait time
+
+        pygame.display.flip()
+        clock.tick(60)
+
+    pygame.quit()
+    sys.exit()
+
+if __name__ == "__main__":
+    main()
+
+

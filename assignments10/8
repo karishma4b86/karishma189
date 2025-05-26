@@ -1,0 +1,23 @@
+from ursina import *
+
+app = Ursina()
+
+# Change the cursor to a named cursor ('arrow', 'hand', 'crosshair', etc.)
+window.cursor = 'hand'  # You can change to 'arrow', 'crosshair', 'wait', etc.
+
+# Hide the mouse cursor
+window.show_cursor = False  # Set True to show cursor again
+
+# Optional: toggle cursor visibility with keys
+def input(key):
+    if key == 'h':  # Press 'h' to hide cursor
+        window.show_cursor = False
+    if key == 's':  # Press 's' to show cursor
+        window.show_cursor = True
+
+# Just a sample cube in scene
+Entity(model='cube', color=color.azure, scale=2)
+
+app.run()
+
+

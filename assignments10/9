@@ -1,0 +1,25 @@
+from ursina import *
+import random
+
+app = Ursina()
+
+# Create a cube entity
+cube = Entity(model='cube', color=color.azure, scale=2)
+
+def random_color():
+    # Return a random color
+    return color.rgb(random.randint(0,255), random.randint(0,255), random.randint(0,255))
+
+# Change cube color when clicked
+def input(key):
+    # On any key press, change cube color
+    if key != 'left mouse down':
+        cube.color = random_color()
+
+# Detect mouse click on cube to change its color
+def update():
+    if mouse.left:
+        if cube.hovered:
+            cube.color = random_color()
+
+app.run()

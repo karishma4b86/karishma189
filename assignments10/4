@@ -1,0 +1,144 @@
+import pygame
+import random
+import sys
+
+# Initialize Pygame
+pygame.init()
+
+# Screen setup
+WIDTH, HEIGHT = 500, 700
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Dodge the Falling Objects")
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (220, 50, 50)
+BLUE = (50, 100, 255)
+
+# Player settings
+PLAYER_WIDTH = 70
+PLAYER_HEIGHT = 50
+PLAYER_SPEED = 3
+
+# Falling object settings
+OBJ_SIZE = 10
+START_SPEED = 3
+SPEED_INCREMENT = 0.05
+
+# Font
+font = pygame.font.SysFont(None, 36)
+
+clock = pygame.time.Clock()
+
+class Player:
+    def __init__(self):
+        self.width = PLAYER_WIDTH
+        self.height = PLAYER_HEIGHT
+        self.x = WIDTH // 2 - self.width // 2
+        self.y = HEIGHT - self.height - 10
+        self.speed = PLAYER_SPEED
+
+    def move(self, direction):
+        if direction == "left":
+            self.x -= self.speed
+        elif direction == "right":
+            self.x += self.speed
+        self.x = max(0, min(self.x, WIDTH - self.width))
+
+    def draw(self):
+        pygame.draw.rect(screen, BLUE, (self.x, self.y, self.width, self.height))
+
+    def get_rect(self):
+        return pygame.Rect(self.x, self.y, self.width, self.height)
+
+class FallingObject:
+    def __init__(self, speed):
+        self.size = OBJ_SIZE
+        self.x = random.randint(0, WIDTH - self.size)
+        self.y = -self.size
+        self.speed = speed
+
+    def fall(self):
+        self.y += self.speed
+
+    def draw(self):
+        pygame.draw.rect(screen, RED, (self.x, self.y, self.size, self.size))
+
+    def get_rect(self):
+        return pygame.Rect(self.x, self.y, self.size, self.size)
+
+def draw_text(text, pos, color=BLACK):
+    img = font.render(text, True, color)
+    screen.blit(img, pos)
+
+def main():
+    player = Player()
+    objects = []
+    spawn_timer = 0
+    spawn_delay = 30  # frames
+    speed = START_SPEED
+    lives = 3
+    score = 0
+
+    running = True
+    while running:
+        clock.tick(60)
+        screen.fill(WHITE)
+        current_time = pygame.time.get_ticks()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            player.move("left")
+        if keys[pygame.K_RIGHT]:
+            player.move("right")
+
+        # Spawn falling objects
+        spawn_timer += 1
+        if spawn_timer >= spawn_delay:
+            spawn_timer = 0
+            objects.append(FallingObject(speed))
+
+        # Update objects
+        for obj in objects[:]:
+            obj.fall()
+            if obj.get_rect().colliderect(player.get_rect()):
+                lives -= 1
+                objects.remove(obj)
+                if lives <= 0:
+                    running = False
+            elif obj.y > HEIGHT:
+                objects.remove(obj)
+                score += 1
+
+        # Increase speed gradually
+        speed += SPEED_INCREMENT
+
+        # Draw everything
+        player.draw()
+        for obj in objects:
+            obj.draw()
+
+        draw_text(f"Lives: {lives}", (10, 10))
+        draw_text(f"Score: {score}", (10, 50))
+
+        pygame.display.flip()
+
+    # Game Over screen
+    screen.fill(WHITE)
+    draw_text("GAME OVER", (WIDTH // 2 - 100, HEIGHT // 2 - 40), RED)
+    draw_text(f"Final Score: {score}", (WIDTH // 2 - 100, HEIGHT // 2 + 10))
+    pygame.display.flip()
+
+    # Wait for 3 seconds before quitting
+    pygame.time.delay(3000)
+
+    pygame.quit()
+    sys.exit()
+
+if __name__ == "__main__":
+    main()

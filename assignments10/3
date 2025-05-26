@@ -1,0 +1,125 @@
+import pygame
+import random
+import sys
+
+# Initialize Pygame
+pygame.init()
+
+# Screen
+WIDTH, HEIGHT = 600, 500
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Color Catch Game")
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+COLORS = {
+    "red": (255, 0, 0),
+    "green": (0, 200, 0),
+    "blue": (0, 0, 255),
+    "yellow": (255, 255, 0),
+}
+
+TARGET_COLOR_NAME = random.choice(list(COLORS.keys()))
+TARGET_COLOR = COLORS[TARGET_COLOR_NAME]
+
+# Bucket
+BUCKET_WIDTH = 100
+BUCKET_HEIGHT = 20
+bucket_x = WIDTH // 2 - BUCKET_WIDTH // 2
+bucket_y = HEIGHT - BUCKET_HEIGHT - 10
+bucket_speed = 7
+
+# Block
+BLOCK_SIZE = 30
+block_speed = 5
+falling_blocks = []
+
+score = 0
+font = pygame.font.SysFont(None, 36)
+
+def create_block():
+    color_name = random.choice(list(COLORS.keys()))
+    color = COLORS[color_name]
+    x = random.randint(0, WIDTH - BLOCK_SIZE)
+    y = -BLOCK_SIZE
+    return {"x": x, "y": y, "color": color, "color_name": color_name}
+
+def draw_bucket(x, y):
+    pygame.draw.rect(screen, TARGET_COLOR, (x, y, BUCKET_WIDTH, BUCKET_HEIGHT))
+
+def draw_block(block):
+    pygame.draw.rect(screen, block["color"], (block["x"], block["y"], BLOCK_SIZE, BLOCK_SIZE))
+
+def draw_text(text, pos, color=WHITE):
+    img = font.render(text, True, color)
+    screen.blit(img, pos)
+
+def main():
+    global bucket_x, score, TARGET_COLOR_NAME, TARGET_COLOR
+    clock = pygame.time.Clock()
+    spawn_timer = 0
+    spawn_interval = 1500  # milliseconds
+
+    running = True
+    while running:
+        dt = clock.tick(60)
+        screen.fill(BLACK)
+
+        # Handle events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        # Key pressed for bucket movement
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            bucket_x -= bucket_speed
+        if keys[pygame.K_RIGHT]:
+            bucket_x += bucket_speed
+
+        # Keep bucket inside screen
+        bucket_x = max(0, min(WIDTH - BUCKET_WIDTH, bucket_x))
+
+        # Spawn new blocks over time
+        spawn_timer += dt
+        if spawn_timer > spawn_interval:
+            spawn_timer = 0
+            falling_blocks.append(create_block())
+
+        # Move blocks down
+        for block in falling_blocks[:]:
+            block["y"] += block_speed
+
+            # Check if block is caught by bucket
+            if block["y"] + BLOCK_SIZE >= bucket_y:
+                # Check horizontal overlap
+                if (block["x"] + BLOCK_SIZE > bucket_x) and (block["x"] < bucket_x + BUCKET_WIDTH):
+                    # Block caught
+                    if block["color_name"] == TARGET_COLOR_NAME:
+                        score += 1
+                    else:
+                        score -= 1
+                    falling_blocks.remove(block)
+                # If block passes bottom without being caught, remove it
+                elif block["y"] > HEIGHT:
+                    falling_blocks.remove(block)
+
+        # Draw bucket
+        draw_bucket(bucket_x, bucket_y)
+
+        # Draw blocks
+        for block in falling_blocks:
+            draw_block(block)
+
+        # Draw target color info and score
+        draw_text(f"Catch the {TARGET_COLOR_NAME.upper()} blocks!", (10, 10))
+        draw_text(f"Score: {score}", (10, 50))
+
+        pygame.display.flip()
+
+    pygame.quit()
+    sys.exit()
+
+if __name__ == "__main__":
+    main()

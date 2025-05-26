@@ -1,0 +1,140 @@
+import pygame
+import sys
+
+# Initialize Pygame
+pygame.init()
+
+# Screen settings
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Classic Pong")
+
+# Colors (changed)
+BACKGROUND_COLOR = (10, 25, 70)   # Dark blue background
+PADDLE_COLOR = (255, 230, 50)     # Bright yellow paddles
+BALL_COLOR = (255, 230, 50)       # Bright yellow ball
+SCORE_COLOR = (150, 255, 255)     # Light cyan score text
+
+# Paddle settings
+PADDLE_WIDTH, PADDLE_HEIGHT = 10, 100
+PADDLE_SPEED = 7
+
+# Ball settings
+BALL_SIZE = 20
+BALL_SPEED_X = 5
+BALL_SPEED_Y = 5
+
+# Fonts
+font = pygame.font.SysFont(None, 50)
+
+clock = pygame.time.Clock()
+
+class Paddle:
+    def __init__(self, x, y):
+        self.rect = pygame.Rect(x, y, PADDLE_WIDTH, PADDLE_HEIGHT)
+        self.speed = 0
+
+    def move(self):
+        self.rect.y += self.speed
+        # Keep paddle inside the screen
+        if self.rect.top < 0:
+            self.rect.top = 0
+        if self.rect.bottom > HEIGHT:
+            self.rect.bottom = HEIGHT
+
+    def draw(self):
+        pygame.draw.rect(screen, PADDLE_COLOR, self.rect)
+
+class Ball:
+    def __init__(self):
+        self.rect = pygame.Rect(WIDTH//2 - BALL_SIZE//2, HEIGHT//2 - BALL_SIZE//2, BALL_SIZE, BALL_SIZE)
+        self.speed_x = BALL_SPEED_X * (-1 if pygame.time.get_ticks() % 2 == 0 else 1)
+        self.speed_y = BALL_SPEED_Y * (-1 if pygame.time.get_ticks() % 2 == 0 else 1)
+
+    def move(self):
+        self.rect.x += self.speed_x
+        self.rect.y += self.speed_y
+
+        # Bounce off top and bottom
+        if self.rect.top <= 0 or self.rect.bottom >= HEIGHT:
+            self.speed_y *= -1
+
+    def reset(self):
+        self.rect.center = (WIDTH // 2, HEIGHT // 2)
+        self.speed_x *= -1  # Change direction
+        self.speed_y = BALL_SPEED_Y * (-1 if pygame.time.get_ticks() % 2 == 0 else 1)
+
+    def draw(self):
+        pygame.draw.ellipse(screen, BALL_COLOR, self.rect)
+
+def draw_scores(left_score, right_score):
+    left_text = font.render(str(left_score), True, SCORE_COLOR)
+    right_text = font.render(str(right_score), True, SCORE_COLOR)
+    screen.blit(left_text, (WIDTH // 4, 20))
+    screen.blit(right_text, (WIDTH * 3 // 4, 20))
+
+def main():
+    left_paddle = Paddle(30, HEIGHT // 2 - PADDLE_HEIGHT // 2)
+    right_paddle = Paddle(WIDTH - 30 - PADDLE_WIDTH, HEIGHT // 2 - PADDLE_HEIGHT // 2)
+    ball = Ball()
+
+    left_score = 0
+    right_score = 0
+
+    running = True
+    while running:
+        clock.tick(60)
+        screen.fill(BACKGROUND_COLOR)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            # Paddle movement
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_w:
+                    left_paddle.speed = -PADDLE_SPEED
+                elif event.key == pygame.K_s:
+                    left_paddle.speed = PADDLE_SPEED
+                elif event.key == pygame.K_UP:
+                    right_paddle.speed = -PADDLE_SPEED
+                elif event.key == pygame.K_DOWN:
+                    right_paddle.speed = PADDLE_SPEED
+            if event.type == pygame.KEYUP:
+                if event.key in (pygame.K_w, pygame.K_s):
+                    left_paddle.speed = 0
+                if event.key in (pygame.K_UP, pygame.K_DOWN):
+                    right_paddle.speed = 0
+
+        # Move paddles and ball
+        left_paddle.move()
+        right_paddle.move()
+        ball.move()
+
+        # Check collision with paddles
+        if ball.rect.colliderect(left_paddle.rect) and ball.speed_x < 0:
+            ball.speed_x *= -1
+        if ball.rect.colliderect(right_paddle.rect) and ball.speed_x > 0:
+            ball.speed_x *= -1
+
+        # Check for scoring
+        if ball.rect.left <= 0:
+            right_score += 1
+            ball.reset()
+        elif ball.rect.right >= WIDTH:
+            left_score += 1
+            ball.reset()
+
+        # Draw everything
+        left_paddle.draw()
+        right_paddle.draw()
+        ball.draw()
+        draw_scores(left_score, right_score)
+
+        pygame.display.flip()
+
+    pygame.quit()
+    sys.exit()
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,30 @@
+from ursina import *
+import random
+
+app = Ursina()
+
+
+player = Entity(model='cube', color=color.azure, scale=2, position=(0,0,0))
+
+
+button = Button(text='', color=color.white, scale=(0.15, 0.1), position=(0, -0.4))
+
+
+button.icon = 'cursor'  
+
+def random_color():
+    return color.rgb(random.randint(0,255), random.randint(0,255), random.randint(0,255))
+
+
+def on_click():
+    player.color = random_color()
+
+button.on_click = on_click
+
+app.run()
+
+
+
+
+
+

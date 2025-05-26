@@ -1,0 +1,69 @@
+import pygame
+import random
+import sys
+
+# Initialize Pygame
+pygame.init()
+
+# Screen settings
+WIDTH, HEIGHT = 600, 400
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Click the Circle Game")
+
+# Colors
+BG_COLOR = (34, 34, 34)
+CIRCLE_COLOR = (255, 64, 129)
+TEXT_COLOR = (255, 255, 255)
+
+# Circle settings
+RADIUS = 25
+
+# Font for score
+font = pygame.font.SysFont(None, 36)
+
+def random_position():
+    x = random.randint(RADIUS, WIDTH - RADIUS)
+    y = random.randint(RADIUS, HEIGHT - RADIUS)
+    return x, y
+
+def draw_text(text, pos):
+    img = font.render(text, True, TEXT_COLOR)
+    screen.blit(img, pos)
+
+def main():
+    clock = pygame.time.Clock()
+    score = 0
+
+    # Initial circle position
+    circle_x, circle_y = random_position()
+
+    running = True
+    while running:
+        screen.fill(BG_COLOR)
+
+        # Draw circle
+        pygame.draw.circle(screen, CIRCLE_COLOR, (circle_x, circle_y), RADIUS)
+
+        # Draw score
+        draw_text(f"Score: {score}", (10, 10))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = event.pos
+                # Check if click is inside circle (distance < radius)
+                dist = ((mx - circle_x) ** 2 + (my - circle_y) ** 2) ** 0.5
+                if dist <= RADIUS:
+                    score += 1
+                    circle_x, circle_y = random_position()
+
+        pygame.display.flip()
+        clock.tick(60)
+
+    pygame.quit()
+    sys.exit()
+
+if __name__ == "__main__":
+    main()

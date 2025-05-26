@@ -1,0 +1,62 @@
+from ursina import *
+
+app = Ursina()
+
+# Window size and boundaries
+window.borderless = False
+window.fullscreen = False
+window.size = (800, 600)
+
+# Gravity
+gravity = Vec3(0, -9.8, 0)
+
+# Ball entity
+class Ball(Entity):
+    def __init__(self):
+        super().__init__(
+            model='sphere',
+            color=color.azure,
+            scale=0.5,
+            position=Vec3(0, 5, 0),
+            collider='sphere'
+        )
+        self.velocity = Vec3(3, 8, 0)  # initial velocity
+
+    def update(self):
+        dt = time.dt
+        # Apply gravity to velocity
+        self.velocity += gravity * dt
+        
+        # Move ball by velocity
+        self.position += self.velocity * dt
+
+        # Floor collision (assume floor at y=0)
+        if self.position.y - self.scale_y/2 < 0:
+            self.position.y = self.scale_y/2
+            self.velocity.y *= -0.8  # bounce and lose some energy
+
+        # Left and right walls (x = ± window width/2)
+        half_width = window.size[0] / 100  # scale window px to ursina units approx
+        if self.position.x - self.scale_x/2 < -half_width:
+            self.position.x = -half_width + self.scale_x/2
+            self.velocity.x *= -1
+        elif self.position.x + self.scale_x/2 > half_width:
+            self.position.x = half_width - self.scale_x/2
+            self.velocity.x *= -1
+
+        # Front and back walls (z = ± window height/2)
+        half_height = window.size[1] / 100
+        if self.position.z - self.scale_z/2 < -half_height:
+            self.position.z = -half_height + self.scale_z/2
+            self.velocity.z *= -1
+        elif self.position.z + self.scale_z/2 > half_height:
+            self.position.z = half_height - self.scale_z/2
+            self.velocity.z *= -1
+
+ball = Ball()
+
+# Camera setup
+camera.position = (0, 10, -15)
+camera.rotation_x = 30
+
+app.run()

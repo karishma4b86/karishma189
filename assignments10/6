@@ -1,0 +1,31 @@
+from ursina import *
+
+app = Ursina()
+
+
+
+player = Entity(model='cube', color=color.orange, scale=(1,2,1), position=(0,1,0), collider='box')
+
+
+camera.parent = player
+camera.position = (0, 1.5, -5)
+camera.rotation_x = 10
+
+
+speed = 5
+
+def update():
+    if held_keys['w']:
+        player.z -= time.dt * speed
+    if held_keys['s']:
+        player.z += time.dt * speed
+    if held_keys['a']:
+        player.x -= time.dt * speed
+    if held_keys['d']:
+        player.x += time.dt * speed
+
+app.run()
+
+
+
+
